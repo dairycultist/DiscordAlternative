@@ -1,6 +1,8 @@
 // server console allows you to run commands that create chatrooms and stuff
 // use SQLite
 
+// so that we don't need extensive moderation tools, I think we should have a simple account system
+
 const fs = require("fs");
 const { createServer } = require("node:http");
 
@@ -20,7 +22,13 @@ createServer((req, res) => {
 	<title>Chat Rooms</title>
 </head>
 <body>
-	<h1>hello!</h1>
+	<div>
+		Logged in as <strong>username123</strong>
+	</div>
+	<nav>
+		Chatrooms: [<a href>Landing</a>] [<a href>General</a>]
+	</nav>
+	<h1>Landing</h1>
 </body>
 </html>
 	`);
