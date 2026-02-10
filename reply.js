@@ -32,13 +32,21 @@ function HTMLChatroomMessages(res, chatroomName, beforeDate = 0, limit = 20) {
 		},
 		(messages) => {
 
+			if (messages.length == 0) {
+
+				res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+				res.end("<div>Reached beginning of chatroom.</div>");
+				return;
+			}
+
 			let messagesEmbed = "";
 
-			// TODO put button at the top which calls the script for the preceding chat logs
+			// put button at the top which calls the script to get messages predating these
+			messagesEmbed += `<button type="button" onclick="requestPastMessages(${ messages[0].datetime });">Load more</button>`;
 
 			// embed all messages
 			for (let msg of messages)
-				messagesEmbed += "<strong>username</strong> - <i style='color: #aaa;'>u" + msg.datetime + "</i><br>" + msg.message + "<br><br>";
+				messagesEmbed += "<div><strong>username</strong> - <i style='color: #aaa;'>u" + msg.datetime + "</i><br>" + msg.message + "</div>";
 
 			res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
 			res.end(messagesEmbed);
@@ -85,14 +93,24 @@ function HTMLChatroom(res, chatroomName) {
 					// <i>Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button></i>
 				}
 
+				function requestPastMessages(beforeDate) {
+				
+					// delete load more button
+					if (document.getElementById("messages").firstChild)
+						document.getElementById("messages").firstChild.remove();
+
+					// get messages
+					fetch("/messages?chatroomName=${ chatroomName }&beforeDate=" + beforeDate)
+					.then(res => res.text())
+					.then(text => {
+						document.getElementById("messages").innerHTML = text + document.getElementById("messages").innerHTML;
+					});
+				}
+
 				function init() {
 
 					// request messages before date 0 and insert them into #messages
-					fetch("/messages?chatroomName=${ chatroomName }&beforeDate=0")
-					.then(res => res.text())
-					.then(text => {
-						document.getElementById("messages").innerHTML = text;
-					});
+					requestPastMessages(0);
 				}
 			</script>
 		</head>

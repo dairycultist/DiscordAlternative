@@ -1,9 +1,9 @@
-// - log in system + log in page which you are redirected to if any of your communications
-//   don't contain the session token
+// - account system + log in page which you are redirected to if any of your communications don't contain a valid session token
 // - automatic chat log refreshing
 // - link embedding (the client does this processing from the plaintext message)
 
-// DMs?
+// DMs? mods?
+// modded accounts would be able to create/delete chatrooms + messages and manage users
 
 const reply = require("./reply.js");
 const db    = require("./db.js");
@@ -11,9 +11,6 @@ const db    = require("./db.js");
 const address    = "localhost";
 const useSecure  = false;
 const useAltPort = true;
-
-// so that we don't need extensive moderation tools, I think we should have a simple account system
-// modded accounts can create/delete chatrooms + messages and manage users
 
 const qs = require("querystring");
 

@@ -47,7 +47,7 @@ function initialize() {
 
 function createChatroom(chatroomName) {
 
-	db.run(`CREATE TABLE chatroom_${ chatroomName } (message_id INTEGER PRIMARY KEY, message TEXT NOT NULL, datetime INTEGER NOT NULL);`);
+	db.run(`CREATE TABLE chatroom_${ chatroomName } (message_id INTEGER PRIMARY KEY AUTO_INCREMENT, message TEXT NOT NULL, datetime INTEGER NOT NULL);`);
 	allChatroomNames.push("chatroom_" + chatroomName);
 }
 
@@ -76,6 +76,8 @@ function getAllChatroomNames() {
 // returns the 'limit' most recent messages that precede beforeDate in chatroomName in ascending order by datetime
 // if beforeDate is 0, the most recent messages of all time are selected
 function getChatroomMessages(chatroomName, beforeDate, limit, onFail, onSuccess) {
+
+	// TODO TODO TODO replace beforeDate with beforeID (since multiple messages can have the same beforeDate)
 
 	// if the chatroom name isn't real, don't even bother (prevents SQL injections too!)
 	if (!chatroomExists(chatroomName)) {
