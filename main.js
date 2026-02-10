@@ -8,6 +8,7 @@ const { createServer } = require("node:http"); // switch to https later
 
 const sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database("database.sql");
+const qs = require('querystring');
 
 // const options = {
 //     key: fs.readFileSync("../private.key.pem"), // path to ssl PRIVATE key from Porkbun
@@ -51,19 +52,47 @@ db.all("SELECT name FROM sqlite_master WHERE type='table';", (err, rows) => {
 
 createServer((req, res) => { // options before () for https
 
+	if (req.url == "/")
+		req.url = "/Landing";
+
 	console.log("\x1b[32m" + req.method + "\x1b[0m \x1b[2m" + req.url + "\x1b[0m");
+
+
 
 	if (req.method == "POST") {
 
-		addMessage("Landing", "right now every message you send just posts this in the landing");
+		// can't post in landing or non-existent chatroom
+		if (req.url == "/Landing" || !allChatroomNames.includes("chatroom_" + req.url.substring(1))) {
+			
+			res.writeHead(400);
+			res.end();
+			return;
+		}
 
-		res.writeHead(201);
-		res.end();
+		// get POST body
+		var body = "";
+
+        req.on("data", (data) => {
+
+            body += data;
+
+            // Too much POST data, kill the connection! (1e6 ~ 1MB)
+            if (body.length > 1e6)
+                request.connection.destroy();
+        });
+
+		// post content
+        req.on("end", () => {
+
+            var post = qs.parse(body);
+
+			addMessage(req.url.substring(1), post.message);
+
+			res.writeHead(201);
+			res.end();
+        });
 
 	} else {
-
-		if (req.url == "/")
-			req.url = "/Landing";
 
 		let chatroom_name = req.url.substring(1);
 
@@ -149,7 +178,7 @@ function replyHTMLChatroom(res, chatroom_name, messages) {
 					var messages = document.getElementById("messages");
 
 					// put message into messages area
-					messages.innerHTML += message + "<br><br>";
+					messages.innerHTML += "<strong>[username]:</strong> " + message + "<br><br>";
 
 					// ensure scrolled to bottom of messages area
 					messages.scrollTop = messages.scrollHeight;
@@ -181,7 +210,7 @@ function replyHTMLChatroom(res, chatroom_name, messages) {
 			<hr>
 			<br>
 
-			<form action="I wanna send a message" method="POST" target="hidden_iframe" onsubmit="onMessageSend(this);">
+			<form action="` + chatroom_name + `" method="POST" target="hidden_iframe" onsubmit="onMessageSend(this);">
 				<input type="text" id="message-input" name="message" style="width: 60em;">
 			</form>
 			<iframe name="hidden_iframe" style="display: none;"></iframe>
