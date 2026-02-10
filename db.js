@@ -11,7 +11,7 @@ module.exports = {
 const sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database("database.sql");
 
-var allChatroomNames; // these are prefixed with chatroom_
+let allChatroomNames; // these are prefixed with chatroom_
 
 // make server aware of all existing chatrooms (and initialize the Landing chatroom if not already initialized)
 function initialize() {
@@ -65,12 +65,12 @@ function addMessage(chatroomName, message) {
 
 function getAllChatroomNames() {
 
-	let all_chatroom_names = "";
+	let names = [];
 
 	for (let name of allChatroomNames)
-		all_chatroom_names += ` [<a href="/chatroom/${ name.substring(9) }">${ name.substring(9) }</a>]`;
+		names.push(name.substring(9));
 
-	return all_chatroom_names;
+	return names;
 }
 
 // returns the 'limit' most recent messages that precede beforeDate in chatroomName in ascending order by datetime
@@ -83,7 +83,7 @@ function getChatroomMessages(chatroomName, beforeDate, limit, onFail, onSuccess)
 		return;
 	}
 
-	var where = "";
+	let where = "";
 
 	if (beforeDate != 0)
 		where = `WHERE datetime < ${ beforeDate } `;

@@ -48,6 +48,11 @@ function HTMLChatroomMessages(res, chatroomName, beforeDate = 0, limit = 20) {
 
 function HTMLChatroom(res, chatroomName) {
 
+	let chatroomList = "";
+
+	for (let name of db.getAllChatroomNames())
+		chatroomList += ` [<a href="/chatroom/${ name }">${ name }</a>]`;
+
 	res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
 	res.end(`
 		<!DOCTYPE html>
@@ -97,7 +102,7 @@ function HTMLChatroom(res, chatroomName) {
 			</div>-->
 			<br>
 			<nav>
-				Chatrooms:` + db.getAllChatroomNames() + `
+				Chatrooms:` + chatroomList + `
 			</nav>
 
 			<h1>` + chatroomName + `</h1>
