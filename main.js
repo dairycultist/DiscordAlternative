@@ -132,7 +132,7 @@ function replyHTMLChatroom(res, chatrooms, messages) {
 				}
 			</script>
 		</head>
-		<body style="height: 100vh;">
+		<body style="height: 100vh; margin: 0; padding: 1em; box-sizing: border-box;">
 			<div>
 				Logged in as <strong>username123</strong> [<a href>settings</a>] [<a href>log out</a>] (settings let you change password, pfp, etc)
 			</div>
@@ -142,7 +142,7 @@ function replyHTMLChatroom(res, chatrooms, messages) {
 
 			<h1>Landing</h1>
 			<hr>
-			<div id="messages" style="overflow-y: scroll; max-height: 50vh;">` + messages + `</div>
+			<div id="messages" style="overflow-y: scroll; height: 50vh;">` + messages + `</div>
 
 			<i>Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button></i>
 			<hr>
