@@ -7,8 +7,6 @@ const port    = 3000; // 443 for HTTPS
 // so that we don't need extensive moderation tools, I think we should have a simple account system
 // modded accounts can create/delete chatrooms + messages and manage users
 
-// for your information there is also db.each, which gives rows one-by-one
-
 const qs = require("querystring");
 const { createServer } = require("node:http"); // switch to https later
 

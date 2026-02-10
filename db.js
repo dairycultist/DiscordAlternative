@@ -1,3 +1,5 @@
+// for your information there is also db.each, which gives rows one-by-one
+
 module.exports = {
     initialize: initialize,
 	addMessage: addMessage,
@@ -9,7 +11,7 @@ module.exports = {
 const sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database("database.sql");
 
-var allChatroomNames;
+var allChatroomNames; // these are prefixed with chatroom_
 
 // make server aware of all existing chatrooms (and initialize the Landing chatroom if not already initialized)
 function initialize() {
@@ -27,24 +29,26 @@ function initialize() {
 
 			db.serialize(() => {
 
-				db.run("CREATE TABLE chatroom_Landing (message_id INTEGER PRIMARY KEY, message TEXT NOT NULL);");
-				allChatroomNames.push("chatroom_Landing");
+				createChatroom("Landing");
 
 				// system messages
 				addMessage("Landing", "Welcome to the chatroom! We currently support NO link embedding!");
 				addMessage("Landing", "You can't type in this chatroom, but you can select chatrooms at the top that you CAN type in.");
 
 				// test chatrooms
-				db.run("CREATE TABLE chatroom_Test1 (message_id INTEGER PRIMARY KEY, message TEXT NOT NULL);");
-				allChatroomNames.push("chatroom_Test1");
-
-				db.run("CREATE TABLE chatroom_Test2 (message_id INTEGER PRIMARY KEY, message TEXT NOT NULL);");
-				allChatroomNames.push("chatroom_Test2");
+				createChatroom("Test1");
+				createChatroom("Test2");
 			});
 		}
 
 		console.log("All chatrooms: " + allChatroomNames.toString());
 	});
+}
+
+function createChatroom(chatroomName) {
+
+	db.run(`CREATE TABLE chatroom_${ chatroomName } (message_id INTEGER PRIMARY KEY, message TEXT NOT NULL, datetime INTEGER NOT NULL);`);
+	allChatroomNames.push("chatroom_" + chatroomName);
 }
 
 function addMessage(chatroomName, message) {
@@ -54,8 +58,8 @@ function addMessage(chatroomName, message) {
 		return;
 
 	// otherwise insert the message
-	const stmt = db.prepare("INSERT INTO chatroom_" + chatroomName + " VALUES (NULL, ?);");
-	stmt.run(message);
+	const stmt = db.prepare("INSERT INTO chatroom_" + chatroomName + " VALUES (NULL, ?, " + Math.floor(Date.now() / 1000) + ");");
+	stmt.run(message); // TODO sanitize the message of HTML and such lol
 	stmt.finalize();
 }
 

@@ -32,8 +32,8 @@ function HTMLChatroom(res, chatroomName) {
 
 			let messagesEmbed = "";
 
-			for (let row of messages)
-				messagesEmbed += "<strong>[username]:</strong> " + row.message + "<br><br>";
+			for (let msg of messages)
+				messagesEmbed += "<strong>username</strong> - <i style='color: #aaa;'><script>document.write(new Date(" + msg.datetime + " * 1000));</script></i><br>" + msg.message + "<br><br>";
 
 			res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
 			res.end(`
@@ -53,7 +53,7 @@ function HTMLChatroom(res, chatroomName) {
 							var messages = document.getElementById("messages");
 
 							// put message into messages area
-							messages.innerHTML += "<strong>[username]:</strong> " + message + "<br><br>";
+							messages.innerHTML += "<strong>you sent:</strong> " + message + "<br><br>";
 
 							// ensure scrolled to bottom of messages area
 							messages.scrollTop = messages.scrollHeight;
