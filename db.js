@@ -47,7 +47,7 @@ function initialize() {
 
 function createChatroom(chatroomName) {
 
-	db.run(`CREATE TABLE chatroom_${ chatroomName } (message_id INTEGER PRIMARY KEY AUTO_INCREMENT, message TEXT NOT NULL, datetime INTEGER NOT NULL);`);
+	db.run(`CREATE TABLE chatroom_${ chatroomName } (message_id INTEGER PRIMARY KEY AUTOINCREMENT, message TEXT NOT NULL, datetime INTEGER NOT NULL);`);
 	allChatroomNames.push("chatroom_" + chatroomName);
 }
 

@@ -104,7 +104,7 @@ const onRequest = (req, res) => {
 
 const onServerCreate = () => {
 
-	console.log(`Hosting on http://${ address }:${ useAltPort ? 3000 : useSecure ? 443 : 80 }}/`);
+	console.log(`Hosting on http://${ address }:${ useAltPort ? 3000 : useSecure ? 443 : 80 }/`);
 };
 
 if (useSecure) {
