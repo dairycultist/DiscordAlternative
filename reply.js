@@ -1,6 +1,7 @@
 const db = require("./db.js");
 
 module.exports = {
+	HTMLChatroomMessages: HTMLChatroomMessages,
     HTMLChatroom: HTMLChatroom
 };
 
@@ -21,13 +22,9 @@ function HTML404(res) {
 	`);
 }
 
-function HTMLChatroom(res, chatroomName) {
+function HTMLChatroomMessages(res, chatroomName, datetime = 0) {
 
-	// - instead of sending the entire chat log of a chatroom, send just a script that tells
-	//   the client to request the chat log before some date; this return like 20 messages
-	//   plus a button at the top which calls the script for the preceding chat logs
-
-	db.getChatroomMessages(chatroomName, 1770794281, 3,
+	db.getChatroomMessages(chatroomName, datetime, 5,
 		() => {
 			// no such table, return error 404
 			HTML404(res);
@@ -36,67 +33,76 @@ function HTMLChatroom(res, chatroomName) {
 
 			let messagesEmbed = "";
 
+			// TODO put button at the top which calls the script for the preceding chat logs
+
+			// embed all messages
 			for (let msg of messages)
 				messagesEmbed += "<strong>username</strong> - <i style='color: #aaa;'><script>document.write(new Date(" + msg.datetime + " * 1000));</script></i><br>" + msg.message + "<br><br>";
 
 			res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-			res.end(`
-				<!DOCTYPE html>
-				<html>
-				<head>
-					<meta charset="UTF-8">
-					<title>Chatrooms</title>
-					<script>
-						function onMessageSend(form) {
+			res.end(messagesEmbed);
+		}
+	);
+}
 
-							let message = document.getElementById("message-input").value.trim();
+function HTMLChatroom(res, chatroomName) {
 
-							if (message.length == 0)
-								return;
+	res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+	res.end(`
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<meta charset="UTF-8">
+			<title>Chatrooms</title>
+			<script>
+				function onMessageSend(form) {
 
-							var messages = document.getElementById("messages");
+					let message = document.getElementById("message-input").value.trim();
 
-							// put message into messages area
-							messages.innerHTML += "<strong>you sent:</strong> " + message + "<br><br>";
+					if (message.length == 0)
+						return;
 
-							// ensure scrolled to bottom of messages area
-							messages.scrollTop = messages.scrollHeight;
+					var messages = document.getElementById("messages");
 
-							setTimeout(function(){ form.reset(); }, 10);
-						}
+					// put message into messages area
+					messages.innerHTML += "<strong>you sent:</strong> " + message + "<br><br>";
 
-						function refreshMessages() {
+					// ensure scrolled to bottom of messages area
+					messages.scrollTop = messages.scrollHeight;
 
-							alert("implement this with fetch later, for now just refresh the page to get all the content");
-							// <i>Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button></i>
-						}
-					</script>
-				</head>
-				<body style="height: 100vh; margin: 0; padding: 1em; box-sizing: border-box;">
-					<!--<div>
-						Logged in as <strong>username123</strong> [<a href>settings</a>] [<a href>log out</a>] (settings let you change password, pfp, etc)
-					</div>-->
-					<br>
-					<nav>
-						Chatrooms:` + db.getAllChatroomNames() + `
-					</nav>
+					setTimeout(function(){ form.reset(); }, 10);
+				}
 
-					<h1>` + chatroomName + `</h1>
-					<hr>
-					<div id="messages" style="overflow-y: scroll; height: 50vh;">` + messagesEmbed + `</div>
+				function refreshMessages() {
 
-					<i>Chat messages don't automatically appear yet, you have to refresh the page manually.</i>
-					<hr>
-					<br>
+					alert("implement this with fetch later, for now just refresh the page to get all the content");
+					// <i>Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button></i>
+				}
+			</script>
+		</head>
+		<body style="height: 100vh; margin: 0; padding: 1em; box-sizing: border-box;">
+			<!--<div>
+				Logged in as <strong>username123</strong> [<a href>settings</a>] [<a href>log out</a>] (settings let you change password, pfp, etc)
+			</div>-->
+			<br>
+			<nav>
+				Chatrooms:` + db.getAllChatroomNames() + `
+			</nav>
 
-					<form action="` + chatroomName + `" method="POST" target="hidden_iframe" onsubmit="onMessageSend(this);">
-						<input type="text" id="message-input" name="message" style="width: 60em;"${ chatroomName == "Landing" ? " disabled" : "" }>
-					</form>
-					<iframe name="hidden_iframe" style="display: none;"></iframe>
+			<h1>` + chatroomName + `</h1>
+			<hr>
+			<div id="messages" style="overflow-y: scroll; height: 50vh;">` + "script that tells the client to request 20 messages before date 0" + `</div>
 
-				</body>
-				</html>
-			`);
-		},
-	)
+			<i>Chat messages don't automatically appear yet, you have to refresh the page manually.</i>
+			<hr>
+			<br>
+
+			<form action="` + chatroomName + `" method="POST" target="hidden_iframe" onsubmit="onMessageSend(this);">
+				<input type="text" id="message-input" name="message" style="width: 60em;"${ chatroomName == "Landing" ? " disabled" : "" }>
+			</form>
+			<iframe name="hidden_iframe" style="display: none;"></iframe>
+
+		</body>
+		</html>
+	`);
 }
