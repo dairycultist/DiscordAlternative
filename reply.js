@@ -23,7 +23,11 @@ function HTML404(res) {
 
 function HTMLChatroom(res, chatroomName) {
 
-	db.getChatroomMessages(chatroomName,
+	// - instead of sending the entire chat log of a chatroom, send just a script that tells
+	//   the client to request the chat log before some date; this return like 20 messages
+	//   plus a button at the top which calls the script for the preceding chat logs
+
+	db.getChatroomMessages(chatroomName, 1770794281, 3,
 		() => {
 			// no such table, return error 404
 			HTML404(res);

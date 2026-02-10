@@ -73,7 +73,8 @@ function getAllChatroomNames() {
 	return all_chatroom_names;
 }
 
-function getChatroomMessages(chatroomName, onFail, onSuccess) {
+// returns the 'limit' most recent messages that precede beforeDate in chatroomName in ascending order by datetime
+function getChatroomMessages(chatroomName, beforeDate, limit, onFail, onSuccess) {
 
 	// if the chatroom name isn't real, don't even bother (prevents SQL injections too!)
 	if (!chatroomExists(chatroomName)) {
@@ -81,7 +82,7 @@ function getChatroomMessages(chatroomName, onFail, onSuccess) {
 		return;
 	}
 
-	db.all("SELECT * FROM chatroom_" + chatroomName + ";", (err, rows) => {
+	db.all(`SELECT * FROM chatroom_${ chatroomName } WHERE datetime < ${ beforeDate } ORDER BY datetime DESC LIMIT ${ limit };`, (err, rows) => {
 
 		if (err) {
 
@@ -89,7 +90,7 @@ function getChatroomMessages(chatroomName, onFail, onSuccess) {
 			return;
 		}
 
-		onSuccess(rows);
+		onSuccess(rows.reverse());
 	});
 }
 

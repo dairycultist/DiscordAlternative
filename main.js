@@ -1,3 +1,10 @@
+// - log in system + log in page which you are redirected to if any of your communications
+//   don't contain the session token
+// - automatic chat log refreshing
+// - link embedding (the client does this processing from the plaintext message)
+
+// DMs?
+
 const reply = require("./reply.js");
 const db    = require("./db.js");
 
