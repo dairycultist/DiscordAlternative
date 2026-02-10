@@ -72,6 +72,19 @@ createServer((req, res) => { // options before () for https
 			<head>
 				<meta charset="UTF-8">
 				<title>Chat Rooms</title>
+				<script>
+					function onMessageSend(form) {
+
+						let message = document.getElementById("message-input").value.trim();
+
+						if (message.length == 0)
+							return;
+
+						document.getElementById("messages").innerHTML += message + "<br><br>";
+
+						setTimeout(function(){ form.reset(); }, 10);
+					}
+				</script>
 			</head>
 			<body>
 				<div>
@@ -85,8 +98,10 @@ createServer((req, res) => { // options before () for https
 				<hr>
 				<div id="messages">` + messages + `</div>
 
-				<form action="I wanna send a message" method="POST" target="hidden_iframe" onsubmit="setTimeout(function(){ reset(); }, 10); return true;">
-					<input type="text" id="message" name="message">
+				<form action="I wanna send a message" method="POST" target="hidden_iframe" onsubmit="onMessageSend(this);">
+					<input type="text" id="message-input" name="message" style="width: 60em;">
+					<br>
+					Refreshing in 30 <button type="button">refresh now</button>
 				</form>
 				<iframe name="hidden_iframe" style="display: none;"></iframe>
 
