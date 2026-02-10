@@ -1,23 +1,18 @@
 const reply = require("./reply.js");
 const db    = require("./db.js");
 
-const address = "localhost";
-const port    = 3000; // 443 for HTTPS
+const address    = "localhost";
+const useSecure  = false;
+const useAltPort = true;
 
 // so that we don't need extensive moderation tools, I think we should have a simple account system
 // modded accounts can create/delete chatrooms + messages and manage users
 
 const qs = require("querystring");
-const { createServer } = require("node:http"); // switch to https later
-
-// const options = {
-//     key: fs.readFileSync("../private.key.pem"), // path to ssl PRIVATE key from Porkbun
-//     cert: fs.readFileSync("../domain.cert.pem"),// path to ssl certificate from Porkbun
-// };
 
 db.initialize();
 
-createServer((req, res) => { // options before () for https
+const onRequest = (req, res) => {
 
 	// log request
 	if (req.url == "/")
@@ -79,8 +74,23 @@ createServer((req, res) => { // options before () for https
 		res.end();
 	}
 
-}).listen(port, address, () => {
+};
 
-	// open page automatically
-	console.log(`Hosting on http://${ address }:${ port }}/`);
-});
+const onServerCreate = () => {
+
+	console.log(`Hosting on http://${ address }:${ useAltPort ? 3000 : useSecure ? 443 : 80 }}/`);
+};
+
+if (useSecure) {
+
+	// const options = {
+	//     key: fs.readFileSync("../private.key.pem"), // path to ssl PRIVATE key from Porkbun
+	//     cert: fs.readFileSync("../domain.cert.pem"),// path to ssl certificate from Porkbun
+	// };
+
+	require("node:https").createServer(options, onRequest).listen(useAltPort ? 3000 : 443, address, onServerCreate);
+
+} else {
+
+	require("node:http").createServer(onRequest).listen(useAltPort ? 3000 : 80, address, onServerCreate);
+}
