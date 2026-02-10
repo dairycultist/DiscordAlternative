@@ -1,3 +1,5 @@
+const db = require("./db.js");
+
 module.exports = {
     HTML404: HTML404,
     HTMLChatroom: HTMLChatroom
@@ -20,64 +22,78 @@ function HTML404(res) {
 	`);
 }
 
-function HTMLChatroom(res, chatroom_name, all_chatroom_names, messages) {
+function HTMLChatroom(res, chatroomName) {
 
-	res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-	res.end(`
-		<!DOCTYPE html>
-		<html>
-		<head>
-			<meta charset="UTF-8">
-			<title>Chatrooms</title>
-			<script>
-				function onMessageSend(form) {
+	db.getChatroomMessages(chatroomName,
+		() => {
+			// no such table, return error 404
+			reply.HTML404(res);
+		},
+		(messages) => {
 
-					let message = document.getElementById("message-input").value.trim();
+			let messagesEmbed = "";
 
-					if (message.length == 0)
-						return;
+			for (let row of messages)
+				messagesEmbed += "<strong>[username]:</strong> " + row.message + "<br><br>";
 
-					var messages = document.getElementById("messages");
+			res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+			res.end(`
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<meta charset="UTF-8">
+					<title>Chatrooms</title>
+					<script>
+						function onMessageSend(form) {
 
-					// put message into messages area
-					messages.innerHTML += "<strong>[username]:</strong> " + message + "<br><br>";
+							let message = document.getElementById("message-input").value.trim();
 
-					// ensure scrolled to bottom of messages area
-					messages.scrollTop = messages.scrollHeight;
+							if (message.length == 0)
+								return;
 
-					setTimeout(function(){ form.reset(); }, 10);
-				}
+							var messages = document.getElementById("messages");
 
-				function refreshMessages() {
+							// put message into messages area
+							messages.innerHTML += "<strong>[username]:</strong> " + message + "<br><br>";
 
-					alert("implement this with fetch later, for now just refresh the page to get all the content");
-					// <i>Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button></i>
-				}
-			</script>
-		</head>
-		<body style="height: 100vh; margin: 0; padding: 1em; box-sizing: border-box;">
-			<!--<div>
-				Logged in as <strong>username123</strong> [<a href>settings</a>] [<a href>log out</a>] (settings let you change password, pfp, etc)
-			</div>-->
-			<br>
-			<nav>
-				Chatrooms:` + all_chatroom_names + `
-			</nav>
+							// ensure scrolled to bottom of messages area
+							messages.scrollTop = messages.scrollHeight;
 
-			<h1>` + chatroom_name + `</h1>
-			<hr>
-			<div id="messages" style="overflow-y: scroll; height: 50vh;">` + messages + `</div>
+							setTimeout(function(){ form.reset(); }, 10);
+						}
 
-			<i>Chat messages don't automatically appear yet, you have to refresh the page manually.</i>
-			<hr>
-			<br>
+						function refreshMessages() {
 
-			<form action="` + chatroom_name + `" method="POST" target="hidden_iframe" onsubmit="onMessageSend(this);">
-				<input type="text" id="message-input" name="message" style="width: 60em;"${ chatroom_name == "Landing" ? " disabled" : "" }>
-			</form>
-			<iframe name="hidden_iframe" style="display: none;"></iframe>
+							alert("implement this with fetch later, for now just refresh the page to get all the content");
+							// <i>Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button></i>
+						}
+					</script>
+				</head>
+				<body style="height: 100vh; margin: 0; padding: 1em; box-sizing: border-box;">
+					<!--<div>
+						Logged in as <strong>username123</strong> [<a href>settings</a>] [<a href>log out</a>] (settings let you change password, pfp, etc)
+					</div>-->
+					<br>
+					<nav>
+						Chatrooms:` + db.getAllChatroomNames() + `
+					</nav>
 
-		</body>
-		</html>
-	`);
+					<h1>` + chatroomName + `</h1>
+					<hr>
+					<div id="messages" style="overflow-y: scroll; height: 50vh;">` + messagesEmbed + `</div>
+
+					<i>Chat messages don't automatically appear yet, you have to refresh the page manually.</i>
+					<hr>
+					<br>
+
+					<form action="` + chatroomName + `" method="POST" target="hidden_iframe" onsubmit="onMessageSend(this);">
+						<input type="text" id="message-input" name="message" style="width: 60em;"${ chatroomName == "Landing" ? " disabled" : "" }>
+					</form>
+					<iframe name="hidden_iframe" style="display: none;"></iframe>
+
+				</body>
+				</html>
+			`);
+		},
+	)
 }
