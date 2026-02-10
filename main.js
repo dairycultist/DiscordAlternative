@@ -68,7 +68,7 @@ createServer((req, res) => { // options before () for https
 		let messages = "";
 
 		for (let row of rows)
-			messages += row.message + "<br><br>";
+			messages += "<strong>[username]:</strong> " + row.message + "<br><br>";
 
 		replyHTMLChatroom(res, chatrooms, messages);
 	});
@@ -115,7 +115,13 @@ function replyHTMLChatroom(res, chatrooms, messages) {
 					if (message.length == 0)
 						return;
 
-					document.getElementById("messages").innerHTML += message + "<br><br>";
+					var messages = document.getElementById("messages");
+
+					// put message into messages area
+					messages.innerHTML += message + "<br><br>";
+
+					// ensure scrolled to bottom of messages area
+					messages.scrollTop = messages.scrollHeight;
 
 					setTimeout(function(){ form.reset(); }, 10);
 				}
@@ -126,7 +132,7 @@ function replyHTMLChatroom(res, chatrooms, messages) {
 				}
 			</script>
 		</head>
-		<body>
+		<body style="height: 100vh;">
 			<div>
 				Logged in as <strong>username123</strong> [<a href>settings</a>] [<a href>log out</a>] (settings let you change password, pfp, etc)
 			</div>
@@ -136,12 +142,14 @@ function replyHTMLChatroom(res, chatrooms, messages) {
 
 			<h1>Landing</h1>
 			<hr>
-			<div id="messages">` + messages + `</div>
+			<div id="messages" style="overflow-y: scroll; max-height: 50vh;">` + messages + `</div>
+
+			<i>Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button></i>
+			<hr>
+			<br>
 
 			<form action="I wanna send a message" method="POST" target="hidden_iframe" onsubmit="onMessageSend(this);">
 				<input type="text" id="message-input" name="message" style="width: 60em;">
-				<br>
-				Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button>
 			</form>
 			<iframe name="hidden_iframe" style="display: none;"></iframe>
 
