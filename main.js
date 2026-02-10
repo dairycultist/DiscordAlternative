@@ -1,7 +1,5 @@
-// server console allows you to run commands that create chatrooms and stuff
-// use SQLite
-
 // so that we don't need extensive moderation tools, I think we should have a simple account system
+// modded accounts can create/delete chatrooms + messages and manage users
 
 const fs = require("fs");
 const { createServer } = require("node:http"); // switch to https later
@@ -82,14 +80,13 @@ createServer((req, res) => { // options before () for https
 				<nav>
 					Chatrooms: [<a href>Landing</a>] [<a href>General</a>]
 				</nav>
-				
+
 				<h1>Landing</h1>
 				<hr>
 				<div id="messages">` + messages + `</div>
 
-				<form action="I wanna send a message" method="POST" target="hidden_iframe">
+				<form action="I wanna send a message" method="POST" target="hidden_iframe" onsubmit="setTimeout(function(){ reset(); }, 10); return true;">
 					<input type="text" id="message" name="message">
-					<button type="submit">Send</button>
 				</form>
 				<iframe name="hidden_iframe" style="display: none;"></iframe>
 
