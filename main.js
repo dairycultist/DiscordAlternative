@@ -12,6 +12,8 @@ const db = new sqlite3.Database("database.sql");
 //     cert: fs.readFileSync("../domain.cert.pem"),// path to ssl certificate from Porkbun
 // };
 
+var allChatroomNames;
+
 // for your information there is also db.each, which gives rows one-by-one
 db.all("SELECT name FROM sqlite_master WHERE type='table' AND name='chatroom_Landing';", (err, rows) => {
 	
@@ -22,20 +24,15 @@ db.all("SELECT name FROM sqlite_master WHERE type='table' AND name='chatroom_Lan
 		process.exit();
 	}
 
-	let hasLanding = false;
+	allChatroomNames = rows.map(row => row.name);
 
-	for (let row of rows) {
-
-		if (row.name == "chatroom_Landing")
-			hasLanding = true;
-	}
-
-	if (!hasLanding) {
+	if (!allChatroomNames.includes("chatroom_Landing")) {
 
 		db.serialize(() => {
 
 			db.run("CREATE TABLE chatroom_Landing (message_id INTEGER PRIMARY KEY, message TEXT NOT NULL);");
 		
+			// system messages
 			const stmt = db.prepare("INSERT INTO chatroom_Landing VALUES (NULL, ?);");
 			stmt.run("Welcome to the chatroom! We currently support NO link embedding!");
 			stmt.run("You can't type in this chatroom, but you can select chatrooms at the top that you CAN type in.");
@@ -59,6 +56,11 @@ createServer((req, res) => { // options before () for https
 			console.error("Error B.");
 			process.exit();
 		}
+
+		let chatrooms = "";
+
+		for (let name of allChatroomNames)
+			chatrooms += ` [<a href>${ name.substring(9) }</a>]`;
 
 		let messages = "";
 
@@ -84,6 +86,11 @@ createServer((req, res) => { // options before () for https
 
 						setTimeout(function(){ form.reset(); }, 10);
 					}
+
+					function refreshMessages() {
+
+						alert("implement this with fetch later, for now just refresh the page to get all the content");
+					}
 				</script>
 			</head>
 			<body>
@@ -91,7 +98,7 @@ createServer((req, res) => { // options before () for https
 					Logged in as <strong>username123</strong> [<a href>settings</a>] [<a href>log out</a>] (settings let you change password, pfp, etc)
 				</div>
 				<nav>
-					Chatrooms: [<a href>Landing</a>] [<a href>General</a>]
+					Chatrooms:` + chatrooms + `
 				</nav>
 
 				<h1>Landing</h1>
@@ -101,7 +108,7 @@ createServer((req, res) => { // options before () for https
 				<form action="I wanna send a message" method="POST" target="hidden_iframe" onsubmit="onMessageSend(this);">
 					<input type="text" id="message-input" name="message" style="width: 60em;">
 					<br>
-					Refreshing in 30 <button type="button">refresh now</button>
+					Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button>
 				</form>
 				<iframe name="hidden_iframe" style="display: none;"></iframe>
 
