@@ -1,12 +1,13 @@
 const reply = require("./reply.js");
 const db    = require("./db.js");
 
+const address = "localhost";
+const port    = 3000; // 443 for HTTPS
+
 // so that we don't need extensive moderation tools, I think we should have a simple account system
 // modded accounts can create/delete chatrooms + messages and manage users
 
 // for your information there is also db.each, which gives rows one-by-one
-
-// TODO clean up code and MAKE SQL COMMANDS SAFE!
 
 const qs = require("querystring");
 const { createServer } = require("node:http"); // switch to https later
@@ -20,17 +21,17 @@ db.initialize();
 
 createServer((req, res) => { // options before () for https
 
+	// log request
 	if (req.url == "/")
 		req.url = "/Landing";
 
 	console.log("\x1b[32m" + req.method + "\x1b[0m \x1b[2m" + req.url + "\x1b[0m");
 
-
-
+	// handle request
 	if (req.method == "POST") {
 
 		// can't post in landing or non-existent chatroom
-		if (req.url == "/Landing" || !db.getAllChatroomNames().includes(req.url.substring(1))) {
+		if (req.url == "/Landing" || !db.chatroomExists(req.url.substring(1))) {
 			
 			res.writeHead(400);
 			res.end();
@@ -69,14 +70,19 @@ createServer((req, res) => { // options before () for https
 			}
         });
 
-	} else {
+	} else if (req.method == "GET" || req.method == "HEAD") {
 
 		// reply with the requested chatroom
 		reply.HTMLChatroom(res, req.url.substring(1));
+
+	} else {
+
+		res.writeHead(501); // Not Implemented
+		res.end();
 	}
 
-}).listen(3000, "localhost", () => { // 443 for HTTPS
+}).listen(port, address, () => {
 
 	// open page automatically
-	console.log(`Hosting on http://localhost:3000/`);
+	console.log(`Hosting on http://${ address }:${ port }}/`);
 });

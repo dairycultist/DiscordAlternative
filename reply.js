@@ -1,7 +1,6 @@
 const db = require("./db.js");
 
 module.exports = {
-    HTML404: HTML404,
     HTMLChatroom: HTMLChatroom
 };
 
@@ -27,7 +26,7 @@ function HTMLChatroom(res, chatroomName) {
 	db.getChatroomMessages(chatroomName,
 		() => {
 			// no such table, return error 404
-			reply.HTML404(res);
+			HTML404(res);
 		},
 		(messages) => {
 

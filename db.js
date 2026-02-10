@@ -2,7 +2,8 @@ module.exports = {
     initialize: initialize,
 	addMessage: addMessage,
 	getAllChatroomNames: getAllChatroomNames,
-	getChatroomMessages: getChatroomMessages
+	getChatroomMessages: getChatroomMessages,
+	chatroomExists: chatroomExists
 };
 
 const sqlite3 = require("sqlite3").verbose();
@@ -46,9 +47,14 @@ function initialize() {
 	});
 }
 
-function addMessage(chatroom_name, message) {
+function addMessage(chatroomName, message) {
 
-	const stmt = db.prepare("INSERT INTO chatroom_" + chatroom_name + " VALUES (NULL, ?);");
+	// if the chatroom name isn't real, don't even bother (prevents SQL injections too!)
+	if (!chatroomExists(chatroomName))
+		return;
+
+	// otherwise insert the message
+	const stmt = db.prepare("INSERT INTO chatroom_" + chatroomName + " VALUES (NULL, ?);");
 	stmt.run(message);
 	stmt.finalize();
 }
@@ -65,6 +71,12 @@ function getAllChatroomNames() {
 
 function getChatroomMessages(chatroomName, onFail, onSuccess) {
 
+	// if the chatroom name isn't real, don't even bother (prevents SQL injections too!)
+	if (!chatroomExists(chatroomName)) {
+		onFail();
+		return;
+	}
+
 	db.all("SELECT * FROM chatroom_" + chatroomName + ";", (err, rows) => {
 
 		if (err) {
@@ -75,4 +87,9 @@ function getChatroomMessages(chatroomName, onFail, onSuccess) {
 
 		onSuccess(rows);
 	});
+}
+
+function chatroomExists(chatroomName) {
+
+	return getAllChatroomNames().includes(chatroomName);
 }
