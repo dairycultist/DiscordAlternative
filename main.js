@@ -50,71 +50,27 @@ createServer((req, res) => { // options before () for https
 	}
 
 	// reply
-	db.all("SELECT * FROM chatroom_Landing;", (err, rows) => {
+	db.all("SELECT * FROM chatroom_" + req.url.substring(1) + ";", (err, rows) => {
 
 		if (err) {
-			console.error("Error B.");
-			process.exit();
+
+			// no such table, return error 404
+			replyHTML404(res);
+			
+			return;
 		}
 
 		let chatrooms = "";
 
 		for (let name of allChatroomNames)
-			chatrooms += ` [<a href>${ name.substring(9) }</a>]`;
+			chatrooms += ` [<a href=${ name.substring(9) }>${ name.substring(9) }</a>]`;
 
 		let messages = "";
 
 		for (let row of rows)
 			messages += row.message + "<br><br>";
 
-		res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-		res.end(`
-			<!DOCTYPE html>
-			<html>
-			<head>
-				<meta charset="UTF-8">
-				<title>Chat Rooms</title>
-				<script>
-					function onMessageSend(form) {
-
-						let message = document.getElementById("message-input").value.trim();
-
-						if (message.length == 0)
-							return;
-
-						document.getElementById("messages").innerHTML += message + "<br><br>";
-
-						setTimeout(function(){ form.reset(); }, 10);
-					}
-
-					function refreshMessages() {
-
-						alert("implement this with fetch later, for now just refresh the page to get all the content");
-					}
-				</script>
-			</head>
-			<body>
-				<div>
-					Logged in as <strong>username123</strong> [<a href>settings</a>] [<a href>log out</a>] (settings let you change password, pfp, etc)
-				</div>
-				<nav>
-					Chatrooms:` + chatrooms + `
-				</nav>
-
-				<h1>Landing</h1>
-				<hr>
-				<div id="messages">` + messages + `</div>
-
-				<form action="I wanna send a message" method="POST" target="hidden_iframe" onsubmit="onMessageSend(this);">
-					<input type="text" id="message-input" name="message" style="width: 60em;">
-					<br>
-					Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button>
-				</form>
-				<iframe name="hidden_iframe" style="display: none;"></iframe>
-
-			</body>
-			</html>
-		`);
+		replyHTMLChatroom(res, chatrooms, messages);
 	});
 
 }).listen(3000, "localhost", () => { // 443 for HTTPS
@@ -122,3 +78,74 @@ createServer((req, res) => { // options before () for https
 	// open page automatically
 	console.log(`Hosting on http://localhost:3000/`);
 });
+
+
+
+function replyHTML404(res) {
+
+	res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+	res.end(`
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<meta charset="UTF-8">
+			<title>Chatrooms</title>
+		</head>
+		<body>
+			<h1>404 error, page not found</h1>
+		</body>
+		</html>
+	`);
+}
+
+function replyHTMLChatroom(res, chatrooms, messages) {
+
+	res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+	res.end(`
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<meta charset="UTF-8">
+			<title>Chatrooms</title>
+			<script>
+				function onMessageSend(form) {
+
+					let message = document.getElementById("message-input").value.trim();
+
+					if (message.length == 0)
+						return;
+
+					document.getElementById("messages").innerHTML += message + "<br><br>";
+
+					setTimeout(function(){ form.reset(); }, 10);
+				}
+
+				function refreshMessages() {
+
+					alert("implement this with fetch later, for now just refresh the page to get all the content");
+				}
+			</script>
+		</head>
+		<body>
+			<div>
+				Logged in as <strong>username123</strong> [<a href>settings</a>] [<a href>log out</a>] (settings let you change password, pfp, etc)
+			</div>
+			<nav>
+				Chatrooms:` + chatrooms + `
+			</nav>
+
+			<h1>Landing</h1>
+			<hr>
+			<div id="messages">` + messages + `</div>
+
+			<form action="I wanna send a message" method="POST" target="hidden_iframe" onsubmit="onMessageSend(this);">
+				<input type="text" id="message-input" name="message" style="width: 60em;">
+				<br>
+				Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button>
+			</form>
+			<iframe name="hidden_iframe" style="display: none;"></iframe>
+
+		</body>
+		</html>
+	`);
+}
