@@ -68,7 +68,7 @@ function getAllChatroomNames() {
 	let all_chatroom_names = "";
 
 	for (let name of allChatroomNames)
-		all_chatroom_names += ` [<a href=${ name.substring(9) }>${ name.substring(9) }</a>]`;
+		all_chatroom_names += ` [<a href="/chatroom/${ name.substring(9) }">${ name.substring(9) }</a>]`;
 
 	return all_chatroom_names;
 }

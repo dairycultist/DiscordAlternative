@@ -23,15 +23,21 @@ const onRequest = (req, res) => {
 
 	// log request
 	if (req.url == "/")
-		req.url = "/Landing";
+		req.url = "/chatroom/Landing";
 
 	console.log("\x1b[32m" + req.method + "\x1b[0m \x1b[2m" + req.url + "\x1b[0m");
 
 	// handle request
 	if (req.method == "POST") {
 
+		if (!req.url.startsWith("/chatroom/")) {
+
+			reply.HTML404();
+			return;
+		}
+
 		// can't post in landing or non-existent chatroom
-		if (req.url == "/Landing" || !db.chatroomExists(req.url.substring(1))) {
+		if (req.url == "/Landing" || !db.chatroomExists(req.url.substring(10))) {
 			
 			res.writeHead(400);
 			res.end();
@@ -63,7 +69,7 @@ const onRequest = (req, res) => {
 			} else {
 			
 				// post message
-				db.addMessage(req.url.substring(1), post.message.trim());
+				db.addMessage(req.url.substring(10), post.message.trim());
 
 				res.writeHead(201);
 				res.end();
@@ -72,8 +78,24 @@ const onRequest = (req, res) => {
 
 	} else if (req.method == "GET" || req.method == "HEAD") {
 
-		// reply with the requested chatroom
-		reply.HTMLChatroom(res, req.url.substring(1));
+		if (req.url.startsWith("/chatroom/")) {
+
+			// reply with the requested chatroom
+			reply.HTMLChatroom(res, req.url.substring(10));
+		
+		} else if (req.url.startsWith("/messages")) {
+
+			const query = qs.parse(req.url.substring(10));
+
+			// TODO prevent errors from query being malformed
+
+			reply.HTMLChatroomMessages(res, query.chatroomName, query.beforeDate, 20);
+
+		} else {
+
+			res.writeHead(400);
+			res.end();
+		}
 
 	} else {
 
