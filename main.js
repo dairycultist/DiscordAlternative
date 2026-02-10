@@ -1,6 +1,8 @@
 // so that we don't need extensive moderation tools, I think we should have a simple account system
 // modded accounts can create/delete chatrooms + messages and manage users
 
+// for your information there is also db.each, which gives rows one-by-one
+
 const fs = require("fs");
 const { createServer } = require("node:http"); // switch to https later
 
@@ -12,12 +14,10 @@ const db = new sqlite3.Database("database.sql");
 //     cert: fs.readFileSync("../domain.cert.pem"),// path to ssl certificate from Porkbun
 // };
 
+// make server aware of all existing chatrooms (and initialize the Landing chatroom if not already done)
 var allChatroomNames;
 
-// for your information there is also db.each, which gives rows one-by-one
-db.all("SELECT name FROM sqlite_master WHERE type='table' AND name='chatroom_Landing';", (err, rows) => {
-	
-	console.log(rows);
+db.all("SELECT name FROM sqlite_master WHERE type='table';", (err, rows) => {
 
 	if (err) {
 		console.error("Error A.");
@@ -31,47 +31,59 @@ db.all("SELECT name FROM sqlite_master WHERE type='table' AND name='chatroom_Lan
 		db.serialize(() => {
 
 			db.run("CREATE TABLE chatroom_Landing (message_id INTEGER PRIMARY KEY, message TEXT NOT NULL);");
-		
+			allChatroomNames.push("chatroom_Landing");
+
 			// system messages
-			const stmt = db.prepare("INSERT INTO chatroom_Landing VALUES (NULL, ?);");
-			stmt.run("Welcome to the chatroom! We currently support NO link embedding!");
-			stmt.run("You can't type in this chatroom, but you can select chatrooms at the top that you CAN type in.");
-			stmt.finalize();
+			addMessage("Landing", "Welcome to the chatroom! We currently support NO link embedding!");
+			addMessage("Landing", "You can't type in this chatroom, but you can select chatrooms at the top that you CAN type in.");
+
+			// test chatrooms
+			db.run("CREATE TABLE chatroom_Test1 (message_id INTEGER PRIMARY KEY, message TEXT NOT NULL);");
+			allChatroomNames.push("chatroom_Test1");
+
+			db.run("CREATE TABLE chatroom_Test2 (message_id INTEGER PRIMARY KEY, message TEXT NOT NULL);");
+			allChatroomNames.push("chatroom_Test2");
 		});
 	}
+
+	console.log("All chatrooms: " + allChatroomNames.toString());
 });
 
 createServer((req, res) => { // options before () for https
 
 	console.log("\x1b[32m" + req.method + "\x1b[0m \x1b[2m" + req.url + "\x1b[0m");
 
-	if (req.method == "GET" && req.url == "/") {
-		req.url = "/Landing";
+	if (req.method == "POST") {
+
+		addMessage("Landing", "right now every message you send just posts this in the landing");
+
+	} else {
+
+		if (req.url == "/")
+			req.url = "/Landing";
+
+		let chatroom_name = req.url.substring(1);
+
+		// reply
+		db.all("SELECT * FROM chatroom_" + chatroom_name + ";", (err, rows) => {
+
+			if (err) {
+
+				// no such table, return error 404
+				replyHTML404(res);
+				
+				return;
+			}
+
+			let messages = "";
+
+			for (let row of rows)
+				messages += "<strong>[username]:</strong> " + row.message + "<br><br>";
+
+			replyHTMLChatroom(res, chatroom_name, messages);
+		});
+
 	}
-
-	// reply
-	db.all("SELECT * FROM chatroom_" + req.url.substring(1) + ";", (err, rows) => {
-
-		if (err) {
-
-			// no such table, return error 404
-			replyHTML404(res);
-			
-			return;
-		}
-
-		let chatrooms = "";
-
-		for (let name of allChatroomNames)
-			chatrooms += ` [<a href=${ name.substring(9) }>${ name.substring(9) }</a>]`;
-
-		let messages = "";
-
-		for (let row of rows)
-			messages += "<strong>[username]:</strong> " + row.message + "<br><br>";
-
-		replyHTMLChatroom(res, chatrooms, messages);
-	});
 
 }).listen(3000, "localhost", () => { // 443 for HTTPS
 
@@ -80,6 +92,17 @@ createServer((req, res) => { // options before () for https
 });
 
 
+
+/*
+ * helpers
+ */
+
+function addMessage(chatroom_name, message) {
+
+	const stmt = db.prepare("INSERT INTO chatroom_" + chatroom_name + " VALUES (NULL, ?);");
+	stmt.run(message);
+	stmt.finalize();
+}
 
 function replyHTML404(res) {
 
@@ -98,7 +121,12 @@ function replyHTML404(res) {
 	`);
 }
 
-function replyHTMLChatroom(res, chatrooms, messages) {
+function replyHTMLChatroom(res, chatroom_name, messages) {
+
+	let chatrooms = "";
+
+	for (let name of allChatroomNames)
+		chatrooms += ` [<a href=${ name.substring(9) }>${ name.substring(9) }</a>]`;
 
 	res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
 	res.end(`
@@ -129,6 +157,7 @@ function replyHTMLChatroom(res, chatrooms, messages) {
 				function refreshMessages() {
 
 					alert("implement this with fetch later, for now just refresh the page to get all the content");
+					// <i>Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button></i>
 				}
 			</script>
 		</head>
@@ -136,15 +165,16 @@ function replyHTMLChatroom(res, chatrooms, messages) {
 			<div>
 				Logged in as <strong>username123</strong> [<a href>settings</a>] [<a href>log out</a>] (settings let you change password, pfp, etc)
 			</div>
+			<br>
 			<nav>
 				Chatrooms:` + chatrooms + `
 			</nav>
 
-			<h1>Landing</h1>
+			<h1>` + chatroom_name + `</h1>
 			<hr>
 			<div id="messages" style="overflow-y: scroll; height: 50vh;">` + messages + `</div>
 
-			<i>Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button></i>
+			<i>Chat messages don't automatically appear yet, you have to refresh the page manually.</i>
 			<hr>
 			<br>
 
