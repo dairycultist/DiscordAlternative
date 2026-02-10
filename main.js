@@ -57,6 +57,9 @@ createServer((req, res) => { // options before () for https
 
 		addMessage("Landing", "right now every message you send just posts this in the landing");
 
+		res.writeHead(201);
+		res.end();
+
 	} else {
 
 		if (req.url == "/")
@@ -106,7 +109,7 @@ function addMessage(chatroom_name, message) {
 
 function replyHTML404(res) {
 
-	res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+	res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
 	res.end(`
 		<!DOCTYPE html>
 		<html>
