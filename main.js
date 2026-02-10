@@ -3,6 +3,8 @@
 
 // for your information there is also db.each, which gives rows one-by-one
 
+// TODO clean up code and MAKE SQL COMMANDS SAFE!
+
 const fs = require("fs");
 const { createServer } = require("node:http"); // switch to https later
 
@@ -81,15 +83,24 @@ createServer((req, res) => { // options before () for https
                 request.connection.destroy();
         });
 
-		// post content
         req.on("end", () => {
 
             var post = qs.parse(body);
 
-			addMessage(req.url.substring(1), post.message);
+			if (post.message.trim().length == 0) {
 
-			res.writeHead(201);
-			res.end();
+				// can't post empty messages
+				res.writeHead(400);
+				res.end();
+
+			} else {
+			
+				// post message
+				addMessage(req.url.substring(1), post.message.trim());
+
+				res.writeHead(201);
+				res.end();
+			}
         });
 
 	} else {
@@ -211,7 +222,7 @@ function replyHTMLChatroom(res, chatroom_name, messages) {
 			<br>
 
 			<form action="` + chatroom_name + `" method="POST" target="hidden_iframe" onsubmit="onMessageSend(this);">
-				<input type="text" id="message-input" name="message" style="width: 60em;">
+				<input type="text" id="message-input" name="message" style="width: 60em;"${ chatroom_name == "Landing" ? " disabled" : "" }>
 			</form>
 			<iframe name="hidden_iframe" style="display: none;"></iframe>
 
