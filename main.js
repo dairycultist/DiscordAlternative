@@ -1,3 +1,5 @@
+const reply = require("./reply.js");
+
 // so that we don't need extensive moderation tools, I think we should have a simple account system
 // modded accounts can create/delete chatrooms + messages and manage users
 
@@ -5,12 +7,11 @@
 
 // TODO clean up code and MAKE SQL COMMANDS SAFE!
 
-const fs = require("fs");
+const qs = require("querystring");
 const { createServer } = require("node:http"); // switch to https later
 
 const sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database("database.sql");
-const qs = require('querystring');
 
 // const options = {
 //     key: fs.readFileSync("../private.key.pem"), // path to ssl PRIVATE key from Porkbun
@@ -113,17 +114,22 @@ createServer((req, res) => { // options before () for https
 			if (err) {
 
 				// no such table, return error 404
-				replyHTML404(res);
+				reply.HTML404(res);
 				
 				return;
 			}
+
+			let all_chatroom_names = "";
+
+			for (let name of allChatroomNames)
+				all_chatroom_names += ` [<a href=${ name.substring(9) }>${ name.substring(9) }</a>]`;
 
 			let messages = "";
 
 			for (let row of rows)
 				messages += "<strong>[username]:</strong> " + row.message + "<br><br>";
 
-			replyHTMLChatroom(res, chatroom_name, messages);
+			reply.HTMLChatroom(res, chatroom_name, all_chatroom_names, messages);
 		});
 
 	}
@@ -145,88 +151,4 @@ function addMessage(chatroom_name, message) {
 	const stmt = db.prepare("INSERT INTO chatroom_" + chatroom_name + " VALUES (NULL, ?);");
 	stmt.run(message);
 	stmt.finalize();
-}
-
-function replyHTML404(res) {
-
-	res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
-	res.end(`
-		<!DOCTYPE html>
-		<html>
-		<head>
-			<meta charset="UTF-8">
-			<title>Chatrooms</title>
-		</head>
-		<body>
-			<h1>404 error, page not found</h1>
-		</body>
-		</html>
-	`);
-}
-
-function replyHTMLChatroom(res, chatroom_name, messages) {
-
-	let chatrooms = "";
-
-	for (let name of allChatroomNames)
-		chatrooms += ` [<a href=${ name.substring(9) }>${ name.substring(9) }</a>]`;
-
-	res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-	res.end(`
-		<!DOCTYPE html>
-		<html>
-		<head>
-			<meta charset="UTF-8">
-			<title>Chatrooms</title>
-			<script>
-				function onMessageSend(form) {
-
-					let message = document.getElementById("message-input").value.trim();
-
-					if (message.length == 0)
-						return;
-
-					var messages = document.getElementById("messages");
-
-					// put message into messages area
-					messages.innerHTML += "<strong>[username]:</strong> " + message + "<br><br>";
-
-					// ensure scrolled to bottom of messages area
-					messages.scrollTop = messages.scrollHeight;
-
-					setTimeout(function(){ form.reset(); }, 10);
-				}
-
-				function refreshMessages() {
-
-					alert("implement this with fetch later, for now just refresh the page to get all the content");
-					// <i>Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button></i>
-				}
-			</script>
-		</head>
-		<body style="height: 100vh; margin: 0; padding: 1em; box-sizing: border-box;">
-			<div>
-				Logged in as <strong>username123</strong> [<a href>settings</a>] [<a href>log out</a>] (settings let you change password, pfp, etc)
-			</div>
-			<br>
-			<nav>
-				Chatrooms:` + chatrooms + `
-			</nav>
-
-			<h1>` + chatroom_name + `</h1>
-			<hr>
-			<div id="messages" style="overflow-y: scroll; height: 50vh;">` + messages + `</div>
-
-			<i>Chat messages don't automatically appear yet, you have to refresh the page manually.</i>
-			<hr>
-			<br>
-
-			<form action="` + chatroom_name + `" method="POST" target="hidden_iframe" onsubmit="onMessageSend(this);">
-				<input type="text" id="message-input" name="message" style="width: 60em;"${ chatroom_name == "Landing" ? " disabled" : "" }>
-			</form>
-			<iframe name="hidden_iframe" style="display: none;"></iframe>
-
-		</body>
-		</html>
-	`);
 }
