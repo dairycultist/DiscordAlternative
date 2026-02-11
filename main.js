@@ -1,6 +1,4 @@
-// - account system + log in page which you are redirected to if any of your communications don't contain a valid session token
-
-// - link embedding (the client does this processing from the plaintext message)
+// TODO account system + log in page which you are redirected to if any of your communications don't contain a valid session token
 
 // DMs? mods?
 // modded accounts would be able to create/delete chatrooms + messages and manage users

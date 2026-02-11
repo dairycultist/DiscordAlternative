@@ -3,6 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Chatrooms</title>
+	<!-- TODO CSS and clean id= system -->
 	<script>
 		function onMessageSend(form) {
 
@@ -28,8 +29,8 @@
 			// <i>Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button></i>
 		}
 
-		// automatic chat log refreshing
-		// to start, only request more recent messages on a button press and after sending a message (server will send back the message)
+		// TODO automatic chat log refreshing
+		// TODO to start, only request more recent messages on a button press and after sending a message (server will send back the message)
 
 		let latestSeenID = 0;
 
@@ -72,8 +73,12 @@
 					}
 
 					// embed all messages
-					for (let msg of messages)
+					for (let msg of messages) {
+
+						// TODO link embedding from plaintext message
+
 						messagesEmbed += "<div><strong>username</strong> - <i style='color: #aaa;'>(#" + msg.message_id + ", u" + msg.datetime + ")</i><br>" + msg.message + "</div>";
+					}
 				}
 
 				document.getElementById("messages").innerHTML = messagesEmbed + document.getElementById("messages").innerHTML;
