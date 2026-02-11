@@ -28,6 +28,15 @@
 			// <i>Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button></i>
 		}
 
+		// automatic chat log refreshing
+		// to start, only request more recent messages on a button press and after sending a message (server will send back the message)
+
+		let latestSeenID = 0;
+
+		function requestUnseenMessages() {
+
+		}
+
 		function requestPastMessages(beforeID = -1) {
 
 			// get messages

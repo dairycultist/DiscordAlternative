@@ -1,5 +1,5 @@
 // - account system + log in page which you are redirected to if any of your communications don't contain a valid session token
-// - automatic chat log refreshing
+
 // - link embedding (the client does this processing from the plaintext message)
 
 // DMs? mods?
