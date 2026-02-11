@@ -79,10 +79,6 @@ function HTMLChatroom(res, chatroomName) {
 				}
 
 				function requestPastMessages(beforeID = -1) {
-				
-					// delete 'load more' button
-					if (document.getElementById("messages").firstChild)
-						document.getElementById("messages").firstChild.remove();
 
 					// get messages
 					fetch("/messages?chatroomName=${ chatroomName }&beforeID=" + beforeID)
@@ -93,14 +89,21 @@ function HTMLChatroom(res, chatroomName) {
 					})
 					.then(messages => {
 
-						let messagesEmbed = "";
+						// delete 'load more' button
+						if (document.getElementById("messages").firstChild)
+							document.getElementById("messages").firstChild.remove();
+
+						//
+						let messagesEmbed;
 
 						if (messages.length == 0) {
+
 							messagesEmbed = "<div style='color: #aaa;'>Reached beginning of chatroom.<br><br></div>";
+
 						} else {
 							
 							// put button at the top which calls the script to get messages predating these
-							messagesEmbed += "<button type='button' onclick='requestPastMessages(" + messages[0].message_id + ");'>Load more</button>";
+							messagesEmbed = "<button type='button' onclick='requestPastMessages(" + messages[0].message_id + ");'>Load more</button>";
 
 							// embed all messages
 							for (let msg of messages)
