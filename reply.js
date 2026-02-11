@@ -1,3 +1,4 @@
+const fs = require("fs");
 const db = require("./db.js");
 
 module.exports = {
@@ -47,105 +48,10 @@ function HTMLChatroom(res, chatroomName) {
 		chatroomList += ` [<a href="/chatroom/${ name }">${ name }</a>]`;
 
 	res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-	res.end(`
-		<!DOCTYPE html>
-		<html>
-		<head>
-			<meta charset="UTF-8">
-			<title>Chatrooms</title>
-			<script>
-				function onMessageSend(form) {
-
-					let message = document.getElementById("message-input").value.trim();
-
-					if (message.length == 0)
-						return;
-
-					var messages = document.getElementById("messages");
-
-					// put message into messages area
-					messages.innerHTML += "<strong>you sent:</strong> " + message + "<br><br>";
-
-					// ensure scrolled to bottom of messages area
-					messages.scrollTop = messages.scrollHeight;
-
-					setTimeout(function(){ form.reset(); }, 10);
-				}
-
-				function refreshMessages() {
-
-					alert("implement this with fetch later, for now just refresh the page to get all the content");
-					// <i>Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button></i>
-				}
-
-				function requestPastMessages(beforeID = -1) {
-
-					// get messages
-					fetch("/messages?chatroomName=${ chatroomName }&beforeID=" + beforeID)
-					.then(response => {
-						if (!response.ok)
-							throw new Error("HTTP error " + response.status);
-						return response.json();
-					})
-					.then(messages => {
-
-						// delete 'load more' button
-						if (document.getElementById("messages").firstChild)
-							document.getElementById("messages").firstChild.remove();
-
-						//
-						let messagesEmbed;
-
-						if (messages.length == 0) {
-
-							messagesEmbed = "<div style='color: #aaa;'>Reached beginning of chatroom.<br><br></div>";
-
-						} else {
-							
-							// put button at the top which calls the script to get messages predating these
-							messagesEmbed = "<button type='button' onclick='requestPastMessages(" + messages[0].message_id + ");'>Load more</button>";
-
-							// embed all messages
-							for (let msg of messages)
-								messagesEmbed += "<div><strong>username</strong> - <i style='color: #aaa;'>(#" + msg.message_id + ", u" + msg.datetime + ")</i><br>" + msg.message + "</div>";
-						}
-
-						document.getElementById("messages").innerHTML = messagesEmbed + document.getElementById("messages").innerHTML;
-					});
-				}
-
-				function init() {
-
-					// request messages and insert them into #messages
-					requestPastMessages();
-
-					setTimeout(function(){ messages.scrollTop = messages.scrollHeight; }, 100);
-				}
-			</script>
-		</head>
-		<body onload="init();" style="height: 100vh; margin: 0; padding: 1em; box-sizing: border-box;">
-			<!--<div>
-				Logged in as <strong>username123</strong> [<a href>settings</a>] [<a href>log out</a>] (settings let you change password, pfp, etc)
-			</div>-->
-			<br>
-			<nav>
-				Chatrooms:` + chatroomList + `
-			</nav>
-
-			<h1>` + chatroomName + `</h1>
-			<hr>
-			<div id="messages" style="overflow-y: scroll; height: 50vh;"></div>
-
-			<i>Chat messages don't automatically appear yet, you have to refresh the page manually.</i>
-			<hr>
-			<br>
-
-			<form action="` + chatroomName + `" method="POST" target="hidden_iframe" onsubmit="onMessageSend(this);">
-				<input type="text" id="message-input" name="message" style="width: 60em;"${ chatroomName == "Landing" ? " disabled" : "" }>
-			</form>
-			<iframe name="hidden_iframe" style="display: none;"></iframe>
-
-		</body>
-		</html>
-	`);
+	res.end(
+		fs.readFileSync("./index.html", "utf8")
+		.replaceAll("[[[chatroomName]]]", chatroomName)
+		.replaceAll("[[[chatroomList]]]", chatroomList)
+		.replaceAll("[[[disable]]]", chatroomName == "Landing" ? " disabled" : "")
+	);
 }
