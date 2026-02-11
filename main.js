@@ -86,7 +86,7 @@ const onRequest = (req, res) => {
 
 			// TODO prevent errors from query being malformed
 
-			reply.HTMLChatroomMessages(res, query.chatroomName, query.beforeID, 20);
+			reply.JSONChatroomMessages(res, query.chatroomName, query.beforeID, 20);
 
 		} else {
 

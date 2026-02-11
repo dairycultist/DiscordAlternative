@@ -79,6 +79,7 @@ function getChatroomMessages(chatroomName, beforeID, limit, onFail, onSuccess) {
 
 	// if the chatroom name isn't real, don't even bother (prevents SQL injections too!)
 	if (!chatroomExists(chatroomName)) {
+		
 		onFail();
 		return;
 	}

@@ -2,7 +2,7 @@ const db = require("./db.js");
 
 module.exports = {
 	HTML404: HTML404,
-	HTMLChatroomMessages: HTMLChatroomMessages,
+	JSONChatroomMessages: JSONChatroomMessages,
     HTMLChatroom: HTMLChatroom
 };
 
@@ -23,7 +23,8 @@ function HTML404(res) {
 	`);
 }
 
-function HTMLChatroomMessages(res, chatroomName, beforeID = -1, limit = 20) {
+// the server sends chat messages as JSON, which the client formats themselves
+function JSONChatroomMessages(res, chatroomName, beforeID = -1, limit = 20) {
 
 	db.getChatroomMessages(chatroomName, beforeID, limit,
 		() => {
@@ -32,24 +33,8 @@ function HTMLChatroomMessages(res, chatroomName, beforeID = -1, limit = 20) {
 		},
 		(messages) => {
 
-			if (messages.length == 0) {
-
-				res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-				res.end("<div style='color: #aaa;'>Reached beginning of chatroom.<br><br></div>");
-				return;
-			}
-
-			let messagesEmbed = "";
-
-			// put button at the top which calls the script to get messages predating these
-			messagesEmbed += `<button type="button" onclick="requestPastMessages(${ messages[0].message_id });">Load more</button>`;
-
-			// embed all messages
-			for (let msg of messages)
-				messagesEmbed += "<div><strong>username</strong> - <i style='color: #aaa;'>(#" + msg.message_id + ", u" + msg.datetime + ")</i><br>" + msg.message + "</div>";
-
-			res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-			res.end(messagesEmbed);
+			res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+			res.end(JSON.stringify(messages));
 		}
 	);
 }
@@ -101,9 +86,28 @@ function HTMLChatroom(res, chatroomName) {
 
 					// get messages
 					fetch("/messages?chatroomName=${ chatroomName }&beforeID=" + beforeID)
-					.then(res => res.text())
-					.then(text => {
-						document.getElementById("messages").innerHTML = text + document.getElementById("messages").innerHTML;
+					.then(response => {
+						if (!response.ok)
+							throw new Error("HTTP error " + response.status);
+						return response.json();
+					})
+					.then(messages => {
+
+						let messagesEmbed = "";
+
+						if (messages.length == 0) {
+							messagesEmbed = "<div style='color: #aaa;'>Reached beginning of chatroom.<br><br></div>";
+						} else {
+							
+							// put button at the top which calls the script to get messages predating these
+							messagesEmbed += "<button type='button' onclick='requestPastMessages(" + messages[0].message_id + ");'>Load more</button>";
+
+							// embed all messages
+							for (let msg of messages)
+								messagesEmbed += "<div><strong>username</strong> - <i style='color: #aaa;'>(#" + msg.message_id + ", u" + msg.datetime + ")</i><br>" + msg.message + "</div>";
+						}
+
+						document.getElementById("messages").innerHTML = messagesEmbed + document.getElementById("messages").innerHTML;
 					});
 				}
 
@@ -111,6 +115,8 @@ function HTMLChatroom(res, chatroomName) {
 
 					// request messages and insert them into #messages
 					requestPastMessages();
+
+					setTimeout(function(){ messages.scrollTop = messages.scrollHeight; }, 100);
 				}
 			</script>
 		</head>
