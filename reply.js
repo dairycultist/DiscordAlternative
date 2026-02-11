@@ -23,9 +23,9 @@ function HTML404(res) {
 	`);
 }
 
-function HTMLChatroomMessages(res, chatroomName, beforeDate = 0, limit = 20) {
+function HTMLChatroomMessages(res, chatroomName, beforeID = -1, limit = 20) {
 
-	db.getChatroomMessages(chatroomName, beforeDate, limit,
+	db.getChatroomMessages(chatroomName, beforeID, limit,
 		() => {
 			// no such table, return error 404
 			HTML404(res);
@@ -42,11 +42,11 @@ function HTMLChatroomMessages(res, chatroomName, beforeDate = 0, limit = 20) {
 			let messagesEmbed = "";
 
 			// put button at the top which calls the script to get messages predating these
-			messagesEmbed += `<button type="button" onclick="requestPastMessages(${ messages[0].datetime });">Load more</button>`;
+			messagesEmbed += `<button type="button" onclick="requestPastMessages(${ messages[0].message_id });">Load more</button>`;
 
 			// embed all messages
 			for (let msg of messages)
-				messagesEmbed += "<div><strong>username</strong> - <i style='color: #aaa;'>u" + msg.datetime + "</i><br>" + msg.message + "</div>";
+				messagesEmbed += "<div><strong>username</strong> - <i style='color: #aaa;'>(#" + msg.message_id + ", u" + msg.datetime + ")</i><br>" + msg.message + "</div>";
 
 			res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
 			res.end(messagesEmbed);
@@ -93,14 +93,14 @@ function HTMLChatroom(res, chatroomName) {
 					// <i>Refreshing in - <button type="button" onclick="refreshMessages();">refresh now</button></i>
 				}
 
-				function requestPastMessages(beforeDate) {
+				function requestPastMessages(beforeID = -1) {
 				
 					// delete 'load more' button
 					if (document.getElementById("messages").firstChild)
 						document.getElementById("messages").firstChild.remove();
 
 					// get messages
-					fetch("/messages?chatroomName=${ chatroomName }&beforeDate=" + beforeDate)
+					fetch("/messages?chatroomName=${ chatroomName }&beforeID=" + beforeID)
 					.then(res => res.text())
 					.then(text => {
 						document.getElementById("messages").innerHTML = text + document.getElementById("messages").innerHTML;
@@ -109,8 +109,8 @@ function HTMLChatroom(res, chatroomName) {
 
 				function init() {
 
-					// request messages before date 0 and insert them into #messages
-					requestPastMessages(0);
+					// request messages and insert them into #messages
+					requestPastMessages();
 				}
 			</script>
 		</head>
