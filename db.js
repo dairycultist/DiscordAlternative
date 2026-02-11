@@ -16,7 +16,7 @@ let allChatroomNames; // these are prefixed with chatroom_
 // make server aware of all existing chatrooms (and initialize the Landing chatroom if not already initialized)
 function initialize() {
 
-	db.all("SELECT name FROM sqlite_master WHERE type='table';", (err, rows) => {
+	db.all("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'chatroom_%';", (err, rows) => {
 
 		if (err) {
 			console.error("Error A.");

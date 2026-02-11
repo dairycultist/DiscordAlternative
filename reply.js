@@ -35,7 +35,7 @@ function HTMLChatroomMessages(res, chatroomName, beforeDate = 0, limit = 20) {
 			if (messages.length == 0) {
 
 				res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-				res.end("<div>Reached beginning of chatroom.</div>");
+				res.end("<div style='color: #aaa;'>Reached beginning of chatroom.<br><br></div>");
 				return;
 			}
 
@@ -95,7 +95,7 @@ function HTMLChatroom(res, chatroomName) {
 
 				function requestPastMessages(beforeDate) {
 				
-					// delete load more button
+					// delete 'load more' button
 					if (document.getElementById("messages").firstChild)
 						document.getElementById("messages").firstChild.remove();
 
